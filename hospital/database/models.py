@@ -60,7 +60,7 @@ class DoctorManage(User):
     age = models.PositiveSmallIntegerField(verbose_name='年龄')
     department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='科室管理')
     choice_education = ((1, '大专'), (2, '本科'), (3, '高中'), (4, '硕士'))
-    education = models.CharField(choices=choice_education, null=True, verbose_name='学历')
+    education = models.PositiveSmallIntegerField(choices=choice_education, null=True, verbose_name='学历')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
     is_delete = models.BooleanField(default=False, verbose_name='是否删除，默认False')
 
@@ -86,7 +86,7 @@ class Registration(models.Model):
     is_first = models.BooleanField(default=1, verbose_name='是否是初诊')
     regist_date = models.DateTimeField(auto_now_add=True, verbose_name='挂号时间')
     status_choice = ((1, '已住院'), (2, '已出院'), (3, '已结算'), (4, '未结算'), (5, '已挂号'), (6, '已退号'))
-    status = models.CharField(choices=status_choice, verbose_name='患者挂号状态')
+    status = models.PositiveSmallIntegerField(choices=status_choice, verbose_name='患者挂号状态')
     department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, verbose_name='关联科室')
     doctor = models.ForeignKey(DoctorManage, on_delete=models.DO_NOTHING, verbose_name='关联医生')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
@@ -150,7 +150,7 @@ class Drug(models.Model):
     selling_price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name='药品售价')
     drug_name = models.CharField(max_length=100, verbose_name='药品名称')
     drug_choice = ((1, '处方药'), (2, '中药'), (3, '西药'))
-    drug_type = models.CharField(choices=drug_choice, default=1, verbose_name='药品类型')
+    drug_type = models.PositiveSmallIntegerField(choices=drug_choice, default=1, verbose_name='药品类型')
     drug_descrip = models.CharField(max_length=50, null=True, verbose_name='药品简介')
     expire_date = models.PositiveSmallIntegerField(verbose_name='保质期')
     drug_describe = models.TextField(verbose_name='药品描述')
@@ -158,9 +158,9 @@ class Drug(models.Model):
     use_instructions = models.CharField(max_length=50, verbose_name='服用说明')
     drug_remark = models.CharField(max_length=200, verbose_name='备注')
     drug_status_choice = ((1, '销售中'), (2, '已售空'))
-    drug_status = models.CharField(choices=drug_status_choice, default=1, verbose_name='销售状态')
-    surplus = models.IntegerField(verbose_name='剩余量')
-    inventory = models.IntegerField(verbose_name='库存')
+    drug_status = models.PositiveSmallIntegerField(choices=drug_status_choice, default=1, verbose_name='销售状态')
+    surplus = models.PositiveIntegerField(verbose_name='剩余量')
+    inventory = models.PositiveIntegerField(verbose_name='库存')
 
     def __str__(self):
         return self.drug_name
@@ -176,7 +176,7 @@ class Dispensing(models.Model):
     drug_number = models.PositiveSmallIntegerField(verbose_name='发药数量')
     issued_number = models.PositiveSmallIntegerField(verbose_name='已发数量')
     not_issued_number = models.PositiveSmallIntegerField(verbose_name='未发数量')
-    registration = models.ForeignKey(Registration, verbose_name='关联患者')
+    registration = models.ForeignKey(Registration, on_delete=models.DO_NOTHING, verbose_name='关联患者')
 
     def __str__(self):
         return self.registration.name
