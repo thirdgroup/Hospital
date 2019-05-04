@@ -105,3 +105,4 @@ venv.bak/
 
 # pycharmIDEAºöÂÔ
 .idea/
+.migrations/
