@@ -29,7 +29,7 @@ class ValidTokenMiddleware(MiddlewareMixin):
                 user.user_secret = uuid4()  # 改变该用户的uuid使该用户强制下线
                 user.save()
                 return JsonResponse({"signint": ["账号在多端登录，账号存在风险，请及时修改密码"]}, status=status.HTTP_400_BAD_REQUEST)
-        if request.META['PATH_INFO'] not in ['/pswdmanage/sign-in/',
+        elif request.META['PATH_INFO'] not in ['/pswdmanage/sign-in/',
                                              '/pswdmanage/captcha/']:  # 如果用户没有携带token而且请求路径不是登录和获取验证码，提示其登录后操作
             return JsonResponse({"signin": ["用户未登录"]}, status=status.HTTP_400_BAD_REQUEST)
 
