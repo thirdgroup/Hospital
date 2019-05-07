@@ -50,22 +50,22 @@ class Department(models.Model):
         verbose_name = '科室'
 
 
-class DoctorManage(User):
+class DoctorManage(models.Model):
     """门诊医生信息"""
     id_number = models.CharField(max_length=18, verbose_name='身份证')
-
     phone = models.CharField(max_length=11, null=True, verbose_name='座机')
     sex = models.BooleanField(default=True, verbose_name='性别')
     birthday = models.DateField(verbose_name='出生年月')
     age = models.PositiveSmallIntegerField(verbose_name='年龄')
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='科室管理')
+    department = models.ForeignKey(Department, related_name='doctormanage', on_delete=models.CASCADE, verbose_name='科室管理')
     choice_education = ((1, '大专'), (2, '本科'), (3, '高中'), (4, '硕士'))
     education = models.PositiveSmallIntegerField(choices=choice_education, null=True, verbose_name='学历')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
     is_delete = models.BooleanField(default=False, verbose_name='是否删除，默认False')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='关联用户')
 
     def __str__(self):
-        return self.real_name
+        return self.user.real_name
 
     class Meta:
         db_table = 'doctormanage'
@@ -87,8 +87,8 @@ class Registration(models.Model):
     regist_date = models.DateTimeField(auto_now_add=True, verbose_name='挂号时间')
     status_choice = ((1, '已住院'), (2, '已出院'), (3, '已结算'), (4, '未结算'), (5, '已挂号'), (6, '已退号'))
     status = models.PositiveSmallIntegerField(choices=status_choice, verbose_name='患者挂号状态')
-    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, verbose_name='关联科室')
-    doctor = models.ForeignKey(DoctorManage, on_delete=models.DO_NOTHING, verbose_name='关联医生')
+    # department = models.ForeignKey(Department, related_name='registration', on_delete=models.DO_NOTHING, verbose_name='关联科室')
+    doctor = models.ManyToManyField(DoctorManage, related_name='registration', verbose_name='关联医生')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
 
     def __str__(self):
@@ -113,6 +113,10 @@ class Admission(models.Model):
 
     def __str__(self):
         return self.registration.name
+
+    class Meta:
+        db_table = 'admission'
+        verbose_name = '住院办理'
 
 
 class PayItems(models.Model):

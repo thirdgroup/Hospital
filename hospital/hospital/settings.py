@@ -38,13 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'database.apps.DatebaseConfig',
+    'database.apps.DatabaseConfig',
     'drugmanage.apps.DrugmanageConfig',
     'inhospital.apps.InhospitalConfig',
     'outpatient.apps.OutpatientConfig',
     'payitems.apps.PayitemsConfig',
     'pswdmanage.apps.PswdmanageConfig',
     'usermanage.apps.UsermanageConfig',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -130,3 +131,9 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'database.User'
 
 MEDIA_ROOT = os.path.join( BASE_DIR, 'media')
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.TokenAuthentication',
+#     )
+# }
