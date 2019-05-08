@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-
     'database.apps.DatabaseConfig',
     'drugmanage.apps.DrugmanageConfig',
     'inhospital.apps.InhospitalConfig',
@@ -45,6 +44,7 @@ INSTALLED_APPS = [
     'payitems.apps.PayitemsConfig',
     'pswdmanage.apps.PswdmanageConfig',
     'usermanage.apps.UsermanageConfig',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -126,7 +126,8 @@ STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'database.User'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_ROOT = os.path.join( BASE_DIR, 'media')
 
 CACHES = {
     "default": {
@@ -153,3 +154,4 @@ JWT_AUTH = {
     'JWT_GET_USER_SECRET_KEY': 'pswdmanage.utils.defined.jwt_get_secret_key',
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
+

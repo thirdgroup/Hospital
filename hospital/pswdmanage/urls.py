@@ -9,3 +9,4 @@ urlpatterns = [
     path('sign-out/',views.SignOut.as_view()),
     path('change/',views.Change.as_view()),
 ]
+
