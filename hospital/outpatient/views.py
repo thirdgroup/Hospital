@@ -2,8 +2,9 @@ import datetime
 
 # from django.shortcuts import render
 from database.models import Registration, Department, DoctorManage
-from outpatient.serializers import RegistrationSerializer, RegistSerializer, DepartmentSerializer, \
-    DoctorManageSerializer
+from outpatient.serializers import RegistrationSerializer, RegistrationListSerializer, RegistrationRetrieveSerializer, \
+    DepartmentSerializer, DepartmentGetSerializer, DoctorManageSerializer, DoctorManageListSerializer, \
+    DoctorManageRetrieveSerializer
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -22,6 +23,9 @@ from rest_framework.utils.urls import replace_query_param, remove_query_param
 
 # Create your views here.
 class MyCursorPagination(CursorPagination):
+    """
+    配置加密分页规则，暂未使用
+    """
     cursor_query_param = 'cursor'
     page_size = 2
     page_size_query_param = 'size'
@@ -33,7 +37,7 @@ class StandardPageNumberPagination(PageNumberPagination):
     """
     配置分页规则
     """
-    page_size = 1
+    page_size = 2
     page_size_query_param = 'page_size'
     page_query_param = 'page'
     max_page_size = 100
@@ -63,8 +67,14 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     科室信息
     """
     queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
+    # serializer_class = DepartmentSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':    # 如果是GET请求(包括'list'、'retrieve'方法)，则使用复杂序列化器
+            return DepartmentGetSerializer
+        else:                               # 如果是POST、PUT、PATCH、DELETE请求，则使用原字段序列化器
+            return DepartmentSerializer
 
 
 # @method_decorator(csrf_exempt, name='patch_all')
@@ -73,9 +83,18 @@ class RegistrationViewSet(viewsets.ModelViewSet):
     患者挂号信息
     """
     queryset = Registration.objects.all()
-    serializer_class = RegistrationSerializer
+    # serializer_class = RegistrationSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = StandardPageNumberPagination
+
+    def get_serializer_class(self):
+        print(self.action)
+        if self.action == 'list':
+            return RegistrationListSerializer
+        elif self.action == 'retrieve':
+            return RegistrationRetrieveSerializer
+        else:
+            return RegistrationSerializer
 
     # filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter,)  # 过滤后端（包括Django过滤后端、排序过滤、查询）
     # filter_fields = ('id', 'doctor', 'department')  # 过滤的字段
@@ -83,19 +102,21 @@ class RegistrationViewSet(viewsets.ModelViewSet):
     # ordering_fields = ('id', 'regist_date',)  # 排序的字段
     # ordering = ('regist_date',)  # 按照挂号时间进行排序
 
-    def list(self, request, *args, **kwargs):
-        """
-        自定义 'list' 方法，用来覆盖DRF的 'list' 方法，使用自定义的第二个序列化器（只序列化部分字段）
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = RegistSerializer(page, many=True, context={'request': request})
-            return self.get_paginated_response(serializer.data)
-
-        serializer = RegistSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = RegistrationListSerializer(page, many=True, context={'request': request})
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = RegistrationListSerializer(queryset, many=True, context={'request': request})
+    #     return Response(serializer.data)
+    #
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = RegistrationRetrieveSerializer(instance, context={'request': request})
+    #     return Response(serializer.data)
 
     def get_queryset(self):
         """
@@ -138,8 +159,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         """
         更改所有传入的挂号ID的状态字段为：已退号；
         """
-        patch_info = request.data
-        print(patch_info)
+        patch_info = request.GET
         record_no_str = patch_info.get('record_no_list', None)
         if record_no_str:
             try:
@@ -166,7 +186,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         """
         导出所有传入ID的挂号信息，使用Excel；
         """
-        export_info = request.data
+        export_info = request.GET
         record_no_str = export_info.get('record_no_list', None)
         if record_no_str:
             try:
@@ -209,7 +229,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
                 else:
                     sex = '女'
                 status_info = status_dict[str(obj.status)]
-                obj_info = [obj.id, obj.doctor.real_name, obj.regist_date, obj.department.department_name,
+                obj_info = [obj.id, obj.doctor.user.real_name, obj.regist_date, obj.doctor.department.department_name,
                             status_info, obj.name, obj.id_number, obj.cost, obj.social_num, obj.phone, is_paying,
                             sex, obj.age, obj.occupation, is_first, obj.remark]
                 for info in range(1, len(obj_info) + 1):
@@ -232,9 +252,36 @@ class DoctorManageViewSet(viewsets.ModelViewSet):
     门诊医生管理
     """
     queryset = DoctorManage.objects.all()
-    serializer_class = DoctorManageSerializer
+    # serializer_class = DoctorManageSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = StandardPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_fields = ('id', 'real_name', 'department')  # 过滤查找的字段
+    filter_fields = ('id', 'user__real_name', 'department')  # 过滤查找的字段
+    ordering_fields = ('id', 'department', 'user__real_name')
     ordering = ('department',)
+
+    def get_serializer_class(self):
+        print(self.action)
+        if self.action == 'list':
+            return DoctorManageListSerializer
+        elif self.action == 'retrieve':
+            return DoctorManageRetrieveSerializer
+        else:
+            return DoctorManageSerializer
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = DoctorManageListSerializer(page, many=True, context={'request': request})
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = DoctorManageListSerializer(queryset, many=True, context={'request': request})
+    #     return Response(serializer.data)
+    #
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = DoctorManageRetrieveSerializer(instance, context={'request': request})
+    #     return Response(serializer.data)

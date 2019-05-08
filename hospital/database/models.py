@@ -52,20 +52,27 @@ class Department(models.Model):
 
 class DoctorManage(models.Model):
     """门诊医生信息"""
+    real_name = models.CharField(max_length=20, verbose_name='真实姓名')
     id_number = models.CharField(max_length=18, verbose_name='身份证')
+    mobile = models.CharField(max_length=11, verbose_name='手机号')
     phone = models.CharField(max_length=11, null=True, verbose_name='座机')
     sex = models.BooleanField(default=True, verbose_name='性别')
     birthday = models.DateField(verbose_name='出生年月')
     age = models.PositiveSmallIntegerField(verbose_name='年龄')
+    email = models.EmailField(null=True, verbose_name='电子邮箱')
     department = models.ForeignKey(Department, related_name='doctormanage', on_delete=models.CASCADE, verbose_name='科室管理')
     choice_education = ((1, '大专'), (2, '本科'), (3, '高中'), (4, '硕士'))
     education = models.PositiveSmallIntegerField(choices=choice_education, null=True, verbose_name='学历')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
     is_delete = models.BooleanField(default=False, verbose_name='是否删除，默认False')
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='关联用户')
+    admission_time = models.DateTimeField(null=True, verbose_name='入院时间')
+    # user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='关联用户')
 
     def __str__(self):
-        return self.user.real_name
+        return self.real_name
+
+    def __repr__(self):
+        return self.real_name
 
     class Meta:
         db_table = 'doctormanage'
@@ -76,27 +83,27 @@ class Registration(models.Model):
     """患者挂号信息"""
     name = models.CharField(max_length=20, verbose_name='患者姓名')
     id_number = models.CharField(max_length=18, verbose_name='患者身份证')
-    cost = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='挂号费')
-    social_num = models.CharField(max_length=10, null=True, verbose_name='社保号')
     phone = models.CharField(max_length=11, verbose_name='联系电话')
-    is_paying = models.BooleanField(default=True, verbose_name='是否自费')
     sex = models.BooleanField(default=1, verbose_name='性别')
     age = models.PositiveSmallIntegerField(null=True, verbose_name='年龄')
+    social_num = models.CharField(max_length=10, null=True, verbose_name='社保号')
     occupation = models.CharField(max_length=20, null=True, verbose_name='职业')
+    cost = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='挂号费')
+    is_paying = models.BooleanField(default=True, verbose_name='是否自费')
     is_first = models.BooleanField(default=1, verbose_name='是否是初诊')
     regist_date = models.DateTimeField(auto_now_add=True, verbose_name='挂号时间')
     status_choice = ((1, '已住院'), (2, '已出院'), (3, '已结算'), (4, '未结算'), (5, '已挂号'), (6, '已退号'))
     status = models.PositiveSmallIntegerField(choices=status_choice, verbose_name='患者挂号状态')
-    # department = models.ForeignKey(Department, related_name='registration', on_delete=models.DO_NOTHING, verbose_name='关联科室')
-    doctor = models.ManyToManyField(DoctorManage, related_name='registration', verbose_name='关联医生')
     remark = models.CharField(max_length=100, null=True, verbose_name='备注')
+    # patient = models.ForeignKey(Patient, on_delete=models.DO_NOTHING, verbose_name='关联患者信息')
+    doctor = models.ForeignKey(DoctorManage, related_name='registration', on_delete=models.DO_NOTHING, verbose_name='关联医生信息')
 
     def __str__(self):
         return self.name
 
     class Meta:
         db_table = 'registration'
-        verbose_name = '病人挂号信息'
+        verbose_name = '患者挂号信息'
 
 
 class Admission(models.Model):
@@ -135,8 +142,8 @@ class PayItems(models.Model):
 class RegisterItems(models.Model):
     """收费项目登记"""
     item_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    registration = models.ForeignKey(Registration, on_delete=models.CASCADE, verbose_name='关联患者挂号信息')
-    pay_items = models.ForeignKey(PayItems, on_delete=models.CASCADE, verbose_name='关联收费项目')
+    registration = models.ForeignKey(Registration, related_name='registeritem', on_delete=models.CASCADE, verbose_name='关联患者挂号信息')
+    pay_items = models.ForeignKey(PayItems, related_name='registeritem', on_delete=models.CASCADE, verbose_name='关联收费项目')
 
     def __str__(self):
         return self.registration.name
@@ -180,7 +187,7 @@ class Dispensing(models.Model):
     drug_number = models.PositiveSmallIntegerField(verbose_name='发药数量')
     issued_number = models.PositiveSmallIntegerField(verbose_name='已发数量')
     not_issued_number = models.PositiveSmallIntegerField(verbose_name='未发数量')
-    registration = models.ForeignKey(Registration, on_delete=models.DO_NOTHING, verbose_name='关联患者')
+    registration = models.ForeignKey(Registration, related_name='dispensing', on_delete=models.DO_NOTHING, verbose_name='关联患者')
 
     def __str__(self):
         return self.registration.name
