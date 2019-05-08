@@ -16,9 +16,9 @@ from outpatient.myLogin import MyLogin
 # })
 
 router = DefaultRouter()
-router.register(r'registration', RegistrationViewSet)
-router.register(r'department', DepartmentViewSet)
-router.register(r'doctormanage', DoctorManageViewSet)
+# router.register(r'registration', RegistrationViewSet)
+# router.register(r'department', DepartmentViewSet)
+# router.register(r'doctormanage', DoctorManageViewSet)
 
 # app_name = 'outpatient'
 

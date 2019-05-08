@@ -1,0 +1,4 @@
+id,nurse,bed_id,pay_deposit,hospital_stays,state_illness,name,phone,doctor,department,status,id_number,social_num,is_paying,sex,age,is_first,remark
+1,王小丫,400,700.00,2019-05-08T09:04:00,法律和劳动法规老咔叽,老李,1234564100,蔡国庆,外科,1,12456789123456789,null,True,True,50,True,dfhlahgla
+2,王小丫,318,100.00,2019-05-04T19:19:59.857955,短发好看凤凰大厦可是罚款,老刘,1234564100,蔡国庆,外科,1,12456789123456789,null,True,True,21,True,和斤斤计较急急急急急急急急急
+3,美滋滋,318,100.00,2019-05-04T19:19:59.857955,短发好看凤凰大厦可是罚款,李武,1234564100,张三,内科,1,12456789123456789,null,True,True,40,True,dfhlahgla

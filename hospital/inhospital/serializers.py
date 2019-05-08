@@ -13,8 +13,8 @@ class HomePageSerializers(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='registration.id')
     name = serializers.ReadOnlyField(source='registration.name')
     phone = serializers.ReadOnlyField(source='registration.phone')
-    doctor = serializers.ReadOnlyField(source='registration.doctor.username')
-    department = serializers.ReadOnlyField(source='registration.department.department_name')
+    doctor = serializers.ReadOnlyField(source='registration.doctor.real_name')
+    department = serializers.ReadOnlyField(source='registration.doctor.department.department_name')
     status = serializers.CharField(source='registration.get_status_display')
 
     class Meta:
@@ -25,8 +25,8 @@ class HomePageSerializers(serializers.ModelSerializer):
 # 为挂号表建立序列化器
 class RegistrationSerializers(serializers.ModelSerializer):
     # admission_url = serializers.HyperlinkedIdentityField(view_name='admission_detail', format='json')
-    doctor = serializers.ReadOnlyField(source='doctor.username')
-    department = serializers.ReadOnlyField(source='department.department_name')
+    doctor = serializers.ReadOnlyField(source='doctor.real_name')
+    department = serializers.ReadOnlyField(source='doctor.department.department_name')
 
     class Meta:
         model = Registration
@@ -62,7 +62,7 @@ class CashPledgeSerializers(serializers.ModelSerializer):
 class AccountHomePageSerializers(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='registration.id')
     name = serializers.ReadOnlyField(source='registration.name')
-    status = serializers.ChoiceField(choices='registration.status_choice', source='registration.status')
+    status = serializers.ReadOnlyField(source='registration.get_status_display')
 
     class Meta:
         model = Admission
@@ -76,10 +76,6 @@ class RegisterItemsSerializers(serializers.ModelSerializer):
     item_name = serializers.ReadOnlyField(source='pay_items.item_name')
     charge_amount = serializers.ReadOnlyField(source='pay_items.charge_amount')
 
-    # registration = serializers.ReadOnlyField(source='registration.name')
-    # pay_items = serializers.ReadOnlyField(source='payItems.item_name')
-    # item_time = serializers.ReadOnlyField(source='registeritems.item_time')
-
     class Meta:
         model = RegisterItems
         fields = ('id', 'name', 'item_time', 'item_name', 'charge_amount')
@@ -87,13 +83,6 @@ class RegisterItemsSerializers(serializers.ModelSerializer):
 
 class ExportSerializers(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='registration.id')
-    # name = serializers.ReadOnlyField(source='registration.name')
-    # phone = serializers.ReadOnlyField(source='registration.phone')
-    # doctor = serializers.ReadOnlyField(source='registration.doctor.username')
-    # department = serializers.ReadOnlyField(source='registration.department.department_name')
-    # status = serializers.CharField(source='registration.get_status_display')
-    # social_num = serializers.ReadOnlyField(source='registration.social_num')
-    # is_paying = serializers.ReadOnlyField(source='registration.is_paying')
     registration = RegistrationSerializers(read_only=True)
 
     class Meta:

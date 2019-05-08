@@ -35,6 +35,7 @@ class AdmissionViewSet(viewsets.ModelViewSet):
         :return:
         """
         query_set = self.queryset
+        print(query_set)
         record_no = self.request.query_params.get('record_no', None)
 
         if record_no:  # 对于病历号的模糊查询
@@ -116,9 +117,7 @@ class AdmissionViewSet(viewsets.ModelViewSet):
         info = request.GET
         print(info)
         id_list = eval(info.get('id', None))
-        # registration_list = nurse_list = bed_id_list = pay_deposit_list = hospital_stays = state_illness = \
-        # name = phone = doctor = department = status = id_number = social_num = is_paying = sex = age = is_first = \
-        # remark = list()
+
         for i in id_list:
             adm_obj = Admission.objects.get(registration_id=i)
             serializer = ExportSerializers(instance=adm_obj)
@@ -194,16 +193,16 @@ class RegisterItemsViewSet(viewsets.ModelViewSet):
 
 
 # 导出Excel
-class Export(APIView):
-
-    def get(self, request):
-        info = request.GET
-        print(info)
-        export_list = info.get('admission_id', None)
-        print(export_list)
-        for i in export_list:
-            obj = Admission.objects.get(registration_id=i)
-            serializer = AdmissionSerializers(instance=obj, context={'request': request})
-            print(serializer.data)
-
-        return JsonResponse({'status': 'ok'})
+# class Export(APIView):
+#
+#     def get(self, request):
+#         info = request.GET
+#         print(info)
+#         export_list = info.get('admission_id', None)
+#         print(export_list)
+#         for i in export_list:
+#             obj = Admission.objects.get(registration_id=i)
+#             serializer = AdmissionSerializers(instance=obj, context={'request': request})
+#             print(serializer.data)
+#
+#         return JsonResponse({'status': 'ok'})
