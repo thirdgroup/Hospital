@@ -1,5 +1,10 @@
 Django==2.1
+django-filter==2.1.0
 djangorestframework==3.9.2
+et-xmlfile==1.0.1
 freeze==1.0.10
+jdcal==1.4.1
+openpyxl==2.6.2
+Pillow==6.0.0
 pytz==2019.1
 six==1.12.0
