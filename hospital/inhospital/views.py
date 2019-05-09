@@ -1,23 +1,26 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from rest_framework.decorators import action
-import numpy
 import pandas as pd
 from database.models import Admission, Registration, DoctorManage, RegisterItems
-from rest_framework.views import APIView
 from inhospital.serializers import AdmissionSerializers, RegistrationSerializers, HomePageSerializers, \
-    CashPledgeSerializers, AccountHomePageSerializers, RegisterItemsSerializers, ExportSerializers
-from django.http import JsonResponse, Http404
-from rest_framework import renderers
+    CashPledgeSerializers, AccountHomePageSerializers, RegisterItemsSerializers, ExportSerializers, PageCustom
+from django.http import JsonResponse, Http404, HttpResponse
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import generics
 from rest_framework import viewsets
-
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 # Create your views here.
-class AdmissionViewSet(viewsets.ModelViewSet):
 
+
+
+def pageview():
+
+    pagination_class = PageCustom  # 使用自定义的分页
+    return pagination_class
+
+class AdmissionViewSet(viewsets.ModelViewSet):
+    pagination_class = pageview()
     # 主页数据接口
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -128,10 +131,10 @@ class AdmissionViewSet(viewsets.ModelViewSet):
             df = pd.DataFrame(admission_data_dict, columns=admission_data_dict.keys(),
                               index=[admission_data_dict['id']])
             try:
-                with open(r'../data.csv') as f:
-                    df.to_csv('../data.csv', mode='a', index=False, header=False)
+                with open(r'../hospitalized_data.csv') as f:
+                    df.to_csv('../hospitalized_data.csv', mode='a', index=False, header=False)
             except FileNotFoundError:
-                df.to_csv('../data.csv', index=False)
+                df.to_csv('../hospitalized_data.csv', index=False)
         return HttpResponse('ok')
         # return JsonResponse({'status', '123'}, safe=False)
 
@@ -140,6 +143,8 @@ class AdmissionViewSet(viewsets.ModelViewSet):
 
 
 class RegistrationViewSet(viewsets.ModelViewSet):
+    pagination_class = pageview()
+
     def retrieve(self, request, pk, *args, **kwargs):
         # pk = request.data['registration_id']
         registration_obj = Registration.objects.get(id=pk)
@@ -151,6 +156,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
 
 
 class CashPledgeViewSet(viewsets.ModelViewSet):
+    pagination_class = pageview()
     def update(self, request, pk, *args, **kwargs):
         data_dict = request.data
         # if 'pay_deposit' in data_dict:
@@ -177,19 +183,67 @@ class CashPledgeViewSet(viewsets.ModelViewSet):
 
 # 住院结算主页信息
 class AccountViewSet(viewsets.ModelViewSet):
+    pagination_class = pageview()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.filter(registration__status=4)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = HomePageSerializers(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = HomePageSerializers(queryset, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    def get_queryset(self):
+        query_set = self.queryset
+        record_no = self.request.query_params.get('record_no', None)
+        if record_no:
+            id_list = list(Admission.objects.values_list('registration_id'))
+            print(id_list)
+            new_list = list()
+            if id_list:
+                new_list = [i[0] for i in id_list if record_no in str(i[0])]
+            query_set = Admission.objects.filter(registration_id__in=new_list)
+        name = self.request.query_params.get('name', None)
+        if name:
+            query_set = query_set.filter(registration__name__icontains=name)
+        return query_set
+
+    @action(detail=False, methods=['GET', 'POST'])
+    def export(self, request):
+        info_list = request.GET
+        id_list = eval(info_list.get('id_list'))
+        for i in id_list:
+            amd_obj = Admission.objects.get(registration_id=i)
+            serializer = AccountHomePageSerializers(instance=amd_obj)
+            amd_dict = dict(serializer.data)
+            df = pd.DataFrame(amd_dict, columns=amd_dict.keys(),
+                              index=[amd_dict['id']])
+            try:
+                with open(r'../account_data.csv') as f:
+                    df.to_csv('../account_data.csv', mode='a', index=False, header=False)
+            except FileNotFoundError:
+                df.to_csv('../account_data.csv', index=False)
+        return HttpResponse('ok')
+
     queryset = Admission.objects.all()
     serializer_class = AccountHomePageSerializers
 
 
 # 住院结算详细信息
 class RegisterItemsViewSet(viewsets.ModelViewSet):
+
+
     def retrieve(self, request, pk, *args, **kwargs):
         registration_obj = RegisterItems.objects.filter(registration_id=pk)
         serializers = RegisterItemsSerializers(instance=registration_obj, many=True, context={'Request': 'request'})
         return JsonResponse(serializers.data, safe=False)
 
+
     queryset = RegisterItems.objects.all()
     serializer_class = RegisterItemsSerializers
+
 
 
 # 导出Excel
